@@ -1,0 +1,44 @@
+version: 1
+
+kinds:
+  bootstrap:
+    template: prompts/kinds/bootstrap.md
+    description: Initial repo bootstrap and status check prompt.
+
+  agents_update:
+    template: prompts/kinds/agents_update.md
+    description: Create or update AGENTS.md using Timeline/Dock operating policy.
+
+  fixed_io_check:
+    template: prompts/kinds/fixed_io_check.md
+    description: Check fixed input/output directory policy and Job/Run model.
+
+  ui_sync_probe:
+    template: prompts/kinds/ui_sync_probe.md
+    description: Read-only probe for sender transport, Codex history capture, and UI reconciliation.
+
+common_context:
+  timeline_operating_context: prompts/common/timeline_operating_context.md
+  send_verification_block: prompts/common/send_verification_block.md
+
+profiles:
+  timeline_audio:
+    product_note: prompts/products/timeline_for_audio.md
+
+  timeline_chatgpt:
+    product_note: prompts/products/timeline_for_chatgpt.md
+
+  timeline_windows_codex:
+    product_note: prompts/products/timeline_for_windows_codex.md
+
+  timeline_video:
+    product_note: prompts/products/timeline_for_video.md
+
+  timeline_pc:
+    product_note: prompts/products/timeline_for_pc.md
+
+  dock_for_chatgpt:
+    product_note: prompts/products/dock_for_chatgpt.md
+
+  dock_for_windows_codex_sender:
+    product_note: prompts/products/dock_for_windows_codex_sender.md

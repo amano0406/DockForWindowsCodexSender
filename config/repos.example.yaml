@@ -1,0 +1,58 @@
+version: 1
+
+repos:
+  timeline_for_audio:
+    name: TimelineForAudio
+    path: ../TimelineForAudio
+    product_family: timeline
+    priority: high
+    prompt_profile: timeline_audio
+    enabled: true
+
+  timeline_for_chatgpt:
+    name: TimelineForChatGPT
+    path: ../TimelineForChatGPT
+    product_family: timeline
+    priority: high
+    prompt_profile: timeline_chatgpt
+    enabled: true
+
+  timeline_for_windows_codex:
+    name: TimelineForWindowsCodex
+    path: ../TimelineForWindowsCodex
+    product_family: timeline
+    priority: high
+    prompt_profile: timeline_windows_codex
+    enabled: true
+
+  timeline_for_video:
+    name: TimelineForVideo
+    path: ../TimelineForVideo
+    product_family: timeline
+    priority: medium
+    prompt_profile: timeline_video
+    enabled: true
+
+  timeline_for_pc:
+    name: TimelineForPC
+    path: ../TimelineForPC
+    product_family: timeline
+    priority: medium
+    prompt_profile: timeline_pc
+    enabled: true
+
+  dock_for_chatgpt:
+    name: DockForChatGPT
+    path: ../DockForChatGPT
+    product_family: dock
+    priority: medium
+    prompt_profile: dock_for_chatgpt
+    enabled: true
+
+  dock_for_windows_codex_sender:
+    name: DockForWindowsCodexSender
+    path: .
+    product_family: dock
+    priority: high
+    prompt_profile: dock_for_windows_codex_sender
+    enabled: true
