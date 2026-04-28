@@ -23,11 +23,14 @@ data/output/runs/timeline-for-audio/
 Prioritize:
 
 - original audio preservation
+- IPA as an important intermediate artifact when present
+- clear boundaries between transcription, diarization, reconstruction, and export
 - input snapshot
 - manifest
 - fidelity report
 - readable text
 - LLM pack
 - reproducibility
+- mock mode and local smoke stability
 
 Do not force Audio-specific IPA / diarization / reconstruction concepts into other products.

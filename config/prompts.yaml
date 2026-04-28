@@ -17,6 +17,10 @@ kinds:
     template: prompts/kinds/ui_sync_probe.md
     description: Read-only probe for sender transport, Codex history capture, and UI reconciliation.
 
+  timeline_next_check:
+    template: prompts/kinds/timeline_next_check.md
+    description: Next Timeline repo check prompt after AGENTS.md rollout.
+
   timeline_video_fix_forward:
     template: prompts/kinds/timeline_video_fix_forward.md
     description: Abstract fix-forward prompt for TimelineForVideo E2E blocker resolution.
@@ -24,6 +28,10 @@ kinds:
   timeline_commit_verified_changes:
     template: prompts/kinds/timeline_commit_verified_changes.md
     description: Review verified local changes and commit when the product thread owns the result.
+
+  timeline_cycle_materials_export:
+    template: prompts/kinds/timeline_cycle_materials_export.md
+    description: Ask TimelineForWindowsCodex to export product-thread history and next-cycle evidence.
 
 common_context:
   timeline_operating_context: prompts/common/timeline_operating_context.md

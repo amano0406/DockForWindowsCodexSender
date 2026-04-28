@@ -23,10 +23,14 @@ data/output/runs/timeline-for-video/
 Prioritize:
 
 - original video preservation
+- transcript traceability
+- screen-derived evidence traceability
 - audio extraction manifest
 - visual frame/OCR sidecar handling
 - scene/event timing
 - fidelity report
 - reproducibility
+- worker / web / export contract stability
+- Docker, start script, and local smoke stability
 
 Avoid large rewrites until TimelineForAudio v2 output contracts are clearer.

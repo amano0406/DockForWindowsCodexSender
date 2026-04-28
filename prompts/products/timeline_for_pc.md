@@ -24,5 +24,8 @@ Security:
 - avoid unnecessary absolute path exposure
 - be careful with username, hostname, network information
 - keep local-first
+- keep mock mode working
+- keep CLI-only; do not add Web UI
+- keep snapshot / redaction / report / export contracts clear
 
 Do not mix always-on screenshot/activity monitoring into this repository without explicit decision.

@@ -26,6 +26,14 @@ Prioritize:
 - message order
 - original export preservation
 - attachment inventory
+- branch ambiguity disclosure
+- missing attachment disclosure
 - main pack / sidecar text pack / binary evidence inventory
 - hash, size, mtime, relative path
 - missing or unprocessed attachment disclosure
+
+Keep responsibilities separate:
+
+- TimelineForChatGPT transforms ChatGPT export data into Timeline artifacts.
+- TimelineForWindowsCodex handles Codex session/work history.
+- DockForChatGPT operates ChatGPT Web as a bridge.
