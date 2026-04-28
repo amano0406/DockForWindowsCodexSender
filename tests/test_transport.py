@@ -75,6 +75,15 @@ def test_default_codex_bin_prefers_explicit_config(monkeypatch: pytest.MonkeyPat
     assert default_codex_bin("settings-codex") == "settings-codex"
 
 
+def test_default_codex_bin_strips_wsl_launcher_inside_docker(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr("dock_for_windows_codex_sender.transport.is_docker_runtime", lambda: True)
+
+    assert (
+        default_codex_bin("wsl.exe /mnt/c/Users/amano/.codex/bin/wsl/codex")
+        == "/mnt/c/Users/amano/.codex/bin/wsl/codex"
+    )
+
+
 def test_default_codex_bin_uses_wsl_candidate_when_codex_is_not_on_path(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -88,6 +97,7 @@ def test_default_codex_bin_uses_wsl_candidate_when_codex_is_not_on_path(
     monkeypatch.delenv("DOCK_CODEX_BIN", raising=False)
     monkeypatch.delenv("USERPROFILE", raising=False)
     monkeypatch.delenv("USERNAME", raising=False)
+    monkeypatch.setattr("dock_for_windows_codex_sender.transport.is_docker_runtime", lambda: False)
     monkeypatch.setattr("dock_for_windows_codex_sender.transport.shutil.which", fake_which)
     monkeypatch.setattr(
         "dock_for_windows_codex_sender.transport.candidate_wsl_codex_commands",
@@ -95,6 +105,24 @@ def test_default_codex_bin_uses_wsl_candidate_when_codex_is_not_on_path(
     )
 
     assert default_codex_bin() == f"wsl.exe {candidate.as_posix()}"
+
+
+def test_default_codex_bin_uses_mounted_candidate_inside_docker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    candidate = tmp_path / "codex"
+    candidate.write_text("", encoding="utf-8")
+
+    monkeypatch.delenv("DOCK_CODEX_BIN", raising=False)
+    monkeypatch.setattr("dock_for_windows_codex_sender.transport.is_docker_runtime", lambda: True)
+    monkeypatch.setattr("dock_for_windows_codex_sender.transport.shutil.which", lambda _: None)
+    monkeypatch.setattr(
+        "dock_for_windows_codex_sender.transport.candidate_wsl_codex_commands",
+        lambda: iter([(candidate.as_posix(), candidate)]),
+    )
+
+    assert default_codex_bin() == candidate.as_posix()
 
 
 def test_send_via_codex_cli_returns_failed_result_when_binary_missing(tmp_path: Path):

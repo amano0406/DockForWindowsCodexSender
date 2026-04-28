@@ -14,7 +14,7 @@ v0.1 supports:
 - prompt rendering
 - outbox prompt files
 - dry-run
-- Codex CLI send
+- Docker-wrapped Codex CLI send
 - send logs
 - prompt-side verification metadata for reconciliation
 
@@ -38,3 +38,5 @@ Receiving and analysis can be handled later by `TimelineForWindowsCodex`.
 
 Web UI and UI automation would add maintenance and verification cost without improving the v0.1 send-only goal.
 Windows app UI may still be used for human inspection, but it is outside this product boundary. CLI logs and artifacts remain the primary evidence path.
+
+Normal CLI execution is Docker-only. Host-side CLI execution is blocked by default and is available only for explicit test/debug exceptions through `DOCK_CODEX_ALLOW_HOST_CLI=1`.

@@ -5,10 +5,11 @@ import re
 import shlex
 import shutil
 import subprocess
-from pathlib import Path
 from collections.abc import Iterator
+from pathlib import Path
 
 from .models import RepoConfig, SendResult
+from .runtime import is_docker_runtime
 
 _THREAD_ID_RE = re.compile(
     r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
@@ -62,10 +63,18 @@ def candidate_wsl_codex_commands() -> Iterator[tuple[str, Path]]:
 def default_codex_bin(configured: str | None = None) -> str:
     configured = configured or os.getenv("DOCK_CODEX_BIN")
     if configured:
+        command_prefix = parse_command_prefix(configured)
+        if is_docker_runtime() and is_wsl_command(command_prefix) and len(command_prefix) > 1:
+            return " ".join(command_prefix[1:])
         return configured
 
     if shutil.which("codex") is not None:
         return "codex"
+
+    if is_docker_runtime():
+        for command_path, local_path in candidate_wsl_codex_commands():
+            if Path(command_path).exists() or local_path.exists():
+                return command_path
 
     if shutil.which("wsl.exe") is not None:
         for command_path, local_path in candidate_wsl_codex_commands():

@@ -8,6 +8,8 @@
 - Do not log secrets, cookies, sessions, tokens, or API keys.
 - Do not add a Web UI, browser frontend, dashboard, localhost service, or Docker Compose web stack.
 - Do not automate Windows app UI until explicitly approved.
+- Run normal CLI operations through Docker.
+- Do not use `DOCK_CODEX_ALLOW_HOST_CLI` for normal sends; it is only for explicit test/debug exceptions.
 
 ## Sending policy
 

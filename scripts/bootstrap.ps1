@@ -1,7 +1,12 @@
-py -m venv .venv
-. .\.venv\Scripts\Activate.ps1
-pip install -e ".[dev]"
-if (-not (Test-Path "config\repos.yaml")) {
-  Copy-Item "config\repos.example.yaml" "config\repos.yaml"
+$ErrorActionPreference = "Stop"
+
+$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$ReposConfig = Join-Path $RepoRoot "config\repos.yaml"
+$ReposExample = Join-Path $RepoRoot "config\repos.example.yaml"
+
+if (-not (Test-Path $ReposConfig)) {
+  Copy-Item $ReposExample $ReposConfig
 }
-pytest
+
+& "$PSScriptRoot\docker.ps1" settings init
+& "$PSScriptRoot\docker-test.ps1"

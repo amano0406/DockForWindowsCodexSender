@@ -6,11 +6,11 @@ It exists because multiple Timeline/Dock/Tool product repositories need repeated
 
 ## Key decision
 
-Keep the product CLI-only and use Codex CLI transport rather than any Web UI or Windows app UI automation.
+Keep the product CLI-only and use Docker-wrapped Codex CLI transport rather than any Web UI or Windows app UI automation.
 
 ## Why
 
-- CLI is scriptable.
+- Docker-wrapped CLI is scriptable while keeping host Python/PATH out of the runtime contract.
 - CLI dry-run behavior is easier to reason about.
 - Sending logs are easier to preserve.
 - Prompt artifacts can carry verification metadata such as `run_id` and `prompt_sha256`.

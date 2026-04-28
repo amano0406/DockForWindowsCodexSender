@@ -8,6 +8,7 @@ from typing import Any
 
 from .config import load_prompts, load_repos, resolve_config_path
 from .render import resolve_project_path
+from .runtime import ALLOW_HOST_CLI_ENV, is_docker_runtime, is_host_cli_allowed
 from .settings import settings_example_path, settings_path
 from .transport import parse_command_prefix
 
@@ -189,6 +190,28 @@ def check_settings_file(project_root: Path) -> list[DoctorCheck]:
     return checks
 
 
+def check_runtime_boundary() -> list[DoctorCheck]:
+    if is_docker_runtime():
+        return [ok("runtime", "running inside Docker runtime")]
+
+    if is_host_cli_allowed():
+        return [
+            warn(
+                "runtime",
+                f"host CLI override is active via {ALLOW_HOST_CLI_ENV}",
+                "Use this only for explicit test/debug exceptions. Normal sends must use scripts\\docker.ps1.",
+            )
+        ]
+
+    return [
+        warn(
+            "runtime",
+            "host runtime detected; the CLI entrypoint blocks this in normal execution",
+            "Run through scripts\\docker.ps1 for normal operation.",
+        )
+    ]
+
+
 def check_codex_cli(codex_bin: str) -> list[DoctorCheck]:
     try:
         command_prefix = parse_command_prefix(codex_bin)
@@ -291,6 +314,7 @@ def run_doctor(
     checks.extend(check_prompts_config(prompts_config, project_root))
     checks.extend(check_data_root(data_root))
     checks.extend(check_settings_file(project_root))
+    checks.extend(check_runtime_boundary())
     checks.extend(check_codex_cli(codex_bin))
     checks.extend(check_cli_only_boundary(project_root))
 

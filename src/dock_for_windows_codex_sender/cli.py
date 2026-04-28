@@ -10,6 +10,7 @@ from .config import load_prompts, load_repos
 from .doctor import run_doctor
 from .models import RenderedPrompt
 from .render import render_prompt
+from .runtime import enforce_cli_runtime
 from .settings import init_settings_file, load_settings
 from .storage import append_send_log, write_prompt_file
 from .transport import default_codex_bin, send_via_codex_cli
@@ -309,6 +310,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    enforce_cli_runtime()
     parser = build_parser()
     args = parser.parse_args()
     raise SystemExit(args.func(args))

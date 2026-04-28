@@ -54,20 +54,62 @@ The Windows Codex app can still be checked manually by a human. That manual chec
 - Receive-side organization is a later step using `send-log.jsonl`, transcript exports, and `TimelineForWindowsCodex`.
 - Windows app UI automation is out of scope for this product.
 
-## Install for development
+## Docker-first execution
+
+Normal operation is Docker-only. Direct host execution of `dock-windows-codex-sender`
+is blocked by default so local Python, PATH, and shell differences do not become part
+of the runtime contract.
+
+Required host-side prerequisites:
+
+- Windows with Docker Desktop running.
+- PowerShell for `scripts\docker.ps1` and `scripts\docker-test.ps1`.
+- This repository under `C:\apps\DockForWindowsCodexSender`, with target repos as siblings under `C:\apps`.
+- Codex CLI available from inside the container. On this machine the expected mounted binary is `/mnt/c/Users/amano/.codex/bin/wsl/codex`.
+
+Not required for normal operation:
+
+- Host Python virtualenv.
+- Host-side `pip install -e`.
+- Direct host execution of `dock-windows-codex-sender`.
+
+Use the Docker wrapper from the repository root:
 
 ```powershell
-py -m venv .venv
-. .\.venv\Scripts\Activate.ps1
-pip install -e ".[dev]"
+.\scripts\docker.ps1 doctor
 ```
+
+The wrapper builds `dock-for-windows-codex-sender:local`, mounts `C:\apps` and the
+local Codex home, then runs the CLI inside the container. If no arguments are passed,
+it runs `doctor`.
+
+After a successful build, add `-SkipBuild` when you intentionally want a faster repeat run:
+
+```powershell
+.\scripts\docker.ps1 -SkipBuild repos list
+```
+
+For unit tests, use:
+
+```powershell
+.\scripts\docker-test.ps1
+```
+
+Host execution is allowed only for explicit test/debug exceptions:
+
+```powershell
+$env:DOCK_CODEX_ALLOW_HOST_CLI = "1"
+pytest
+```
+
+Do not use `DOCK_CODEX_ALLOW_HOST_CLI` for normal sends.
 
 ## Configure repositories
 
 Initialize local settings once:
 
 ```powershell
-dock-windows-codex-sender settings init
+.\scripts\docker.ps1 settings init
 ```
 
 This creates `settings.json` only when it does not already exist. `settings.example.json` is tracked by Git; `settings.json` is local-only and ignored by Git.
@@ -114,7 +156,8 @@ This repository does not own Timeline `Job` / `Run` execution output. For this s
 
 ## Codex binary setup
 
-If Codex CLI is installed on Windows and available on Windows `PATH`, the default `codex` is enough.
+Docker-first operation requires a Codex CLI binary that is visible inside the container.
+Windows `PATH` is not the runtime contract for this product.
 
 If Codex CLI exists only inside WSL, `settings init` stores the auto-detected launcher in `settings.json` when possible. The CLI can also auto-detect this known local launcher:
 
@@ -122,10 +165,17 @@ If Codex CLI exists only inside WSL, `settings init` stores the auto-detected la
 wsl.exe /mnt/c/Users/amano/.codex/bin/wsl/codex
 ```
 
+Inside Docker, the sender strips the outer `wsl.exe` launcher and uses the mounted
+Codex binary path directly:
+
+```text
+/mnt/c/Users/amano/.codex/bin/wsl/codex
+```
+
 If auto-detection does not work, pass a launcher command string such as:
 
 ```powershell
-set DOCK_CODEX_BIN=wsl.exe /mnt/c/Users/amano/.codex/bin/wsl/codex
+$env:DOCK_CODEX_BIN = "wsl.exe /mnt/c/Users/amano/.codex/bin/wsl/codex"
 ```
 
 `wsl.exe codex` alone may fail in non-interactive runs because the WSL shell `PATH` is not guaranteed to include `codex`.
@@ -135,19 +185,19 @@ set DOCK_CODEX_BIN=wsl.exe /mnt/c/Users/amano/.codex/bin/wsl/codex
 List configured repositories:
 
 ```powershell
-dock-windows-codex-sender repos list
+.\scripts\docker.ps1 repos list
 ```
 
 Check whether local settings are ready for actual send:
 
 ```powershell
-dock-windows-codex-sender doctor
+.\scripts\docker.ps1 doctor
 ```
 
 If Codex CLI exists only inside WSL and auto-detection does not find it:
 
 ```powershell
-dock-windows-codex-sender doctor --codex-bin "wsl.exe /mnt/c/Users/amano/.codex/bin/wsl/codex"
+.\scripts\docker.ps1 doctor --codex-bin "wsl.exe /mnt/c/Users/amano/.codex/bin/wsl/codex"
 ```
 
 `doctor` is read-only. It checks repository config, prompt config, data directories, Codex CLI launchability, CLI-only boundaries, and whether `AGENTS.md` has reappeared.
@@ -155,7 +205,7 @@ dock-windows-codex-sender doctor --codex-bin "wsl.exe /mnt/c/Users/amano/.codex/
 Render one prompt:
 
 ```powershell
-dock-windows-codex-sender prompt render --repo timeline_for_chatgpt --kind bootstrap
+.\scripts\docker.ps1 prompt render --repo timeline_for_chatgpt --kind bootstrap
 ```
 
 If you want a human-chosen verification token, add `--run-id <token>`.
@@ -163,31 +213,31 @@ If you want a human-chosen verification token, add `--run-id <token>`.
 Render all bootstrap prompts to `data/outbox`:
 
 ```powershell
-dock-windows-codex-sender prompt render-all --kind bootstrap
+.\scripts\docker.ps1 prompt render-all --kind bootstrap
 ```
 
 Dry-run send:
 
 ```powershell
-dock-windows-codex-sender send --repo timeline_for_chatgpt --kind bootstrap --dry-run
+.\scripts\docker.ps1 send --repo timeline_for_chatgpt --kind bootstrap --dry-run
 ```
 
 Send into an existing Codex session:
 
 ```powershell
-dock-windows-codex-sender send --repo timeline_for_chatgpt --kind bootstrap --resume 019dcbc7-fe5f-7ae3-8983-da7a703d9cf0
+.\scripts\docker.ps1 send --repo timeline_for_chatgpt --kind bootstrap --resume 019dcbc7-fe5f-7ae3-8983-da7a703d9cf0
 ```
 
 Resume the most recent session filtered by the target repo working directory:
 
 ```powershell
-dock-windows-codex-sender send --repo timeline_for_chatgpt --kind bootstrap --resume-last
+.\scripts\docker.ps1 send --repo timeline_for_chatgpt --kind bootstrap --resume-last
 ```
 
 Read-only verification probe:
 
 ```powershell
-dock-windows-codex-sender send --repo timeline_for_windows_codex --kind ui_sync_probe --run-id ui-probe-001 --dry-run
+.\scripts\docker.ps1 send --repo timeline_for_windows_codex --kind ui_sync_probe --run-id ui-probe-001 --dry-run
 ```
 
 Dry-run prints:
@@ -209,7 +259,7 @@ Resume notes:
 Actual send through Codex CLI:
 
 ```powershell
-dock-windows-codex-sender send --repo timeline_for_chatgpt --kind bootstrap
+.\scripts\docker.ps1 send --repo timeline_for_chatgpt --kind bootstrap
 ```
 
 Actual send behavior:
@@ -237,19 +287,19 @@ Actual send behavior:
 Send all, dry-run first:
 
 ```powershell
-dock-windows-codex-sender send-all --kind bootstrap --dry-run
+.\scripts\docker.ps1 send-all --kind bootstrap --dry-run
 ```
 
 Actual send-all requires an explicit confirmation flag:
 
 ```powershell
-dock-windows-codex-sender send-all --kind bootstrap --confirm-send-all
+.\scripts\docker.ps1 send-all --kind bootstrap --confirm-send-all
 ```
 
 ## Development checks
 
 ```powershell
-pytest
+.\scripts\docker-test.ps1
 ```
 
 ## Safety rules
@@ -261,3 +311,4 @@ pytest
 - Never perform deploy, merge, external post, or secret changes.
 - Keep all sent prompts in `data/sent`.
 - Keep send logs in `data/logs/send-log.jsonl`.
+- Run normal CLI operations through `scripts\docker.ps1`; host CLI is test-only and requires `DOCK_CODEX_ALLOW_HOST_CLI=1`.

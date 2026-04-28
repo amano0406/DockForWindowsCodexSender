@@ -3,17 +3,19 @@
 ## First setup
 
 ```powershell
+cd C:\apps
 git clone https://github.com/amano0406/DockForWindowsCodexSender.git
 cd DockForWindowsCodexSender
-py -m venv .venv
-. .\.venv\Scripts\Activate.ps1
-pip install -e ".[dev]"
 copy config\repos.example.yaml config\repos.yaml
+.\scripts\docker.ps1 settings init
 ```
 
 Edit `config/repos.yaml`.
 
-This product has no Web UI. Operate it from the CLI commands below.
+This product has no Web UI. Operate it through the Docker wrapper commands below.
+Direct host execution of `dock-windows-codex-sender` is blocked by default.
+Docker Desktop must be running before using the wrapper scripts.
+Codex CLI must be visible from inside the container; Windows `PATH` alone is not enough.
 
 If Codex CLI is available only in WSL, set:
 
@@ -23,16 +25,19 @@ $env:DOCK_CODEX_BIN = "wsl.exe /mnt/c/Users/amano/.codex/bin/wsl/codex"
 
 Do not assume `wsl.exe codex` is enough in non-interactive runs.
 
+Inside Docker, the sender converts a configured `wsl.exe /mnt/c/.../codex` launcher
+to the mounted `/mnt/c/.../codex` path automatically.
+
 ## Render prompt
 
 ```powershell
-dock-windows-codex-sender prompt render --repo timeline_for_chatgpt --kind bootstrap
+.\scripts\docker.ps1 prompt render --repo timeline_for_chatgpt --kind bootstrap
 ```
 
 Optional:
 
 ```powershell
-dock-windows-codex-sender prompt render --repo timeline_for_chatgpt --kind bootstrap --run-id ui-probe-001
+.\scripts\docker.ps1 prompt render --repo timeline_for_chatgpt --kind bootstrap --run-id ui-probe-001
 ```
 
 Check and note:
@@ -44,7 +49,7 @@ Check and note:
 ## Dry-run send
 
 ```powershell
-dock-windows-codex-sender send --repo timeline_for_chatgpt --kind bootstrap --dry-run
+.\scripts\docker.ps1 send --repo timeline_for_chatgpt --kind bootstrap --dry-run
 ```
 
 Dry-run is the approval surface for:
@@ -59,13 +64,13 @@ If you also used `prompt render` earlier, prefer the `send --dry-run` outbox fil
 ## Send to existing session
 
 ```powershell
-dock-windows-codex-sender send --repo timeline_for_chatgpt --kind bootstrap --resume 019dcbc7-fe5f-7ae3-8983-da7a703d9cf0 --dry-run
+.\scripts\docker.ps1 send --repo timeline_for_chatgpt --kind bootstrap --resume 019dcbc7-fe5f-7ae3-8983-da7a703d9cf0 --dry-run
 ```
 
 Or:
 
 ```powershell
-dock-windows-codex-sender send --repo timeline_for_chatgpt --kind bootstrap --resume-last --dry-run
+.\scripts\docker.ps1 send --repo timeline_for_chatgpt --kind bootstrap --resume-last --dry-run
 ```
 
 Notes:
@@ -77,7 +82,7 @@ Notes:
 ## Read-only verification probe
 
 ```powershell
-dock-windows-codex-sender send --repo timeline_for_windows_codex --kind ui_sync_probe --run-id ui-probe-001 --dry-run
+.\scripts\docker.ps1 send --repo timeline_for_windows_codex --kind ui_sync_probe --run-id ui-probe-001 --dry-run
 ```
 
 Then run the actual send only when you want to validate `.codex` / Timeline capture behavior.
@@ -85,7 +90,7 @@ Then run the actual send only when you want to validate `.codex` / Timeline capt
 ## Actual send
 
 ```powershell
-dock-windows-codex-sender send --repo timeline_for_chatgpt --kind bootstrap
+.\scripts\docker.ps1 send --repo timeline_for_chatgpt --kind bootstrap
 ```
 
 After actual send, verify in this order:
@@ -101,13 +106,13 @@ If step 3 fails, treat CLI to UI synchronization as unverified in that environme
 ## Send-all dry-run
 
 ```powershell
-dock-windows-codex-sender send-all --kind bootstrap --dry-run
+.\scripts\docker.ps1 send-all --kind bootstrap --dry-run
 ```
 
 ## Send-all actual
 
 ```powershell
-dock-windows-codex-sender send-all --kind bootstrap --confirm-send-all
+.\scripts\docker.ps1 send-all --kind bootstrap --confirm-send-all
 ```
 
 Do not run actual send-all before inspecting rendered prompts.
