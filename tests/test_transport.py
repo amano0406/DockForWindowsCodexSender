@@ -7,6 +7,7 @@ from dock_for_windows_codex_sender.models import RepoConfig
 from dock_for_windows_codex_sender.transport import (
     build_codex_exec_command,
     build_codex_resume_command,
+    default_codex_bin,
     detect_observed_session,
     extract_thread_id_from_session_path,
     is_wsl_command,
@@ -60,6 +61,40 @@ def test_build_codex_exec_command_for_wsl_launcher():
         "/mnt/c/apps/TimelineForWindowsCodex",
         "-",
     ]
+
+
+def test_default_codex_bin_prefers_env_override(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("DOCK_CODEX_BIN", "custom-codex")
+
+    assert default_codex_bin() == "custom-codex"
+
+
+def test_default_codex_bin_prefers_explicit_config(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("DOCK_CODEX_BIN", "env-codex")
+
+    assert default_codex_bin("settings-codex") == "settings-codex"
+
+
+def test_default_codex_bin_uses_wsl_candidate_when_codex_is_not_on_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    candidate = tmp_path / "codex"
+    candidate.write_text("", encoding="utf-8")
+
+    def fake_which(command: str) -> str | None:
+        return "wsl.exe" if command == "wsl.exe" else None
+
+    monkeypatch.delenv("DOCK_CODEX_BIN", raising=False)
+    monkeypatch.delenv("USERPROFILE", raising=False)
+    monkeypatch.delenv("USERNAME", raising=False)
+    monkeypatch.setattr("dock_for_windows_codex_sender.transport.shutil.which", fake_which)
+    monkeypatch.setattr(
+        "dock_for_windows_codex_sender.transport.candidate_wsl_codex_commands",
+        lambda: iter([(candidate.as_posix(), candidate)]),
+    )
+
+    assert default_codex_bin() == f"wsl.exe {candidate.as_posix()}"
 
 
 def test_send_via_codex_cli_returns_failed_result_when_binary_missing(tmp_path: Path):

@@ -7,31 +7,56 @@ from dataclasses import replace
 from pathlib import Path
 
 from .config import load_prompts, load_repos
+from .doctor import run_doctor
 from .models import RenderedPrompt
 from .render import render_prompt
+from .settings import init_settings_file, load_settings
 from .storage import append_send_log, write_prompt_file
-from .transport import send_via_codex_cli
+from .transport import default_codex_bin, send_via_codex_cli
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
+def as_project_path(value: str) -> Path:
+    path = Path(value)
+    if path.is_absolute():
+        return path
+    return PROJECT_ROOT / path
+
+
+def current_settings():
+    return load_settings(PROJECT_ROOT)
+
+
 def default_repos_config() -> Path:
-    return Path(os.getenv("DOCK_CODEX_REPOS_CONFIG", "config/repos.yaml"))
+    value = os.getenv("DOCK_CODEX_REPOS_CONFIG") or current_settings().repos_config
+    return as_project_path(value)
 
 
 def default_prompts_config() -> Path:
-    return Path(os.getenv("DOCK_CODEX_PROMPTS_CONFIG", "config/prompts.yaml"))
+    value = os.getenv("DOCK_CODEX_PROMPTS_CONFIG") or current_settings().prompts_config
+    return as_project_path(value)
 
 
 def default_data_root() -> Path:
-    return Path(os.getenv("DOCK_CODEX_DATA_ROOT", "data"))
+    value = os.getenv("DOCK_CODEX_DATA_ROOT") or current_settings().data_root
+    return as_project_path(value)
 
 
-def add_common_args(parser: argparse.ArgumentParser) -> None:
+def default_codex_bin_arg() -> str:
+    settings = current_settings()
+    return default_codex_bin(settings.codex_bin)
+
+
+def add_config_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repos-config", type=Path, default=default_repos_config())
     parser.add_argument("--prompts-config", type=Path, default=default_prompts_config())
     parser.add_argument("--data-root", type=Path, default=default_data_root())
+
+
+def add_common_args(parser: argparse.ArgumentParser) -> None:
+    add_config_args(parser)
     parser.add_argument("--run-id")
 
 
@@ -195,6 +220,37 @@ def cmd_send_all(args: argparse.Namespace) -> int:
     return exit_code
 
 
+def cmd_doctor(args: argparse.Namespace) -> int:
+    checks = run_doctor(
+        repos_config=args.repos_config,
+        prompts_config=args.prompts_config,
+        data_root=args.data_root,
+        project_root=PROJECT_ROOT,
+        codex_bin=args.codex_bin,
+    )
+
+    has_ng = False
+    for check in checks:
+        if check.status == "NG":
+            has_ng = True
+        print(f"{check.status}\t{check.name}\t{check.message}")
+        if check.action:
+            print(f"ACTION\t{check.name}\t{check.action}")
+
+    return 1 if has_ng else 0
+
+
+def cmd_settings_init(args: argparse.Namespace) -> int:
+    path, created = init_settings_file(
+        project_root=PROJECT_ROOT,
+        overrides={"codex_bin": default_codex_bin()},
+    )
+    status = "created" if created else "exists"
+    print(f"status={status}")
+    print(f"settings_path={path}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="dock-windows-codex-sender")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -225,7 +281,7 @@ def build_parser() -> argparse.ArgumentParser:
     send.add_argument("--repo", required=True)
     send.add_argument("--kind", required=True)
     send.add_argument("--dry-run", action="store_true")
-    send.add_argument("--codex-bin", default=os.getenv("DOCK_CODEX_BIN", "codex"))
+    send.add_argument("--codex-bin", default=default_codex_bin_arg())
     resume_group = send.add_mutually_exclusive_group()
     resume_group.add_argument("--resume")
     resume_group.add_argument("--resume-last", action="store_true")
@@ -236,8 +292,18 @@ def build_parser() -> argparse.ArgumentParser:
     send_all.add_argument("--kind", required=True)
     send_all.add_argument("--dry-run", action="store_true")
     send_all.add_argument("--confirm-send-all", action="store_true")
-    send_all.add_argument("--codex-bin", default=os.getenv("DOCK_CODEX_BIN", "codex"))
+    send_all.add_argument("--codex-bin", default=default_codex_bin_arg())
     send_all.set_defaults(func=cmd_send_all)
+
+    doctor = sub.add_parser("doctor")
+    add_config_args(doctor)
+    doctor.add_argument("--codex-bin", default=default_codex_bin_arg())
+    doctor.set_defaults(func=cmd_doctor)
+
+    settings = sub.add_parser("settings")
+    settings_sub = settings.add_subparsers(dest="settings_command", required=True)
+    settings_init = settings_sub.add_parser("init")
+    settings_init.set_defaults(func=cmd_settings_init)
 
     return parser
 

@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "repos_config": "config/repos.yaml",
+  "prompts_config": "config/prompts.yaml",
+  "data_root": "data",
+  "codex_bin": ""
+}

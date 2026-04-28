@@ -64,6 +64,14 @@ pip install -e ".[dev]"
 
 ## Configure repositories
 
+Initialize local settings once:
+
+```powershell
+dock-windows-codex-sender settings init
+```
+
+This creates `settings.json` only when it does not already exist. `settings.example.json` is tracked by Git; `settings.json` is local-only and ignored by Git.
+
 ```powershell
 copy config\repos.example.yaml config\repos.yaml
 ```
@@ -74,6 +82,8 @@ If `config/repos.yaml` does not exist, the CLI falls back to `config/repos.examp
 
 ## Prompt/config files
 
+- `settings.example.json`: tracked example for local CLI settings
+- `settings.json`: local-only settings, created by `settings init`
 - `config/repos.yaml`: local repo registry
 - `config/repos.example.yaml`: example repo registry and fallback
 - `config/prompts.yaml`: prompt kind/profile mapping
@@ -106,7 +116,13 @@ This repository does not own Timeline `Job` / `Run` execution output. For this s
 
 If Codex CLI is installed on Windows and available on Windows `PATH`, the default `codex` is enough.
 
-If Codex CLI exists only inside WSL, pass a launcher command string such as:
+If Codex CLI exists only inside WSL, `settings init` stores the auto-detected launcher in `settings.json` when possible. The CLI can also auto-detect this known local launcher:
+
+```text
+wsl.exe /mnt/c/Users/amano/.codex/bin/wsl/codex
+```
+
+If auto-detection does not work, pass a launcher command string such as:
 
 ```powershell
 set DOCK_CODEX_BIN=wsl.exe /mnt/c/Users/amano/.codex/bin/wsl/codex
@@ -121,6 +137,20 @@ List configured repositories:
 ```powershell
 dock-windows-codex-sender repos list
 ```
+
+Check whether local settings are ready for actual send:
+
+```powershell
+dock-windows-codex-sender doctor
+```
+
+If Codex CLI exists only inside WSL and auto-detection does not find it:
+
+```powershell
+dock-windows-codex-sender doctor --codex-bin "wsl.exe /mnt/c/Users/amano/.codex/bin/wsl/codex"
+```
+
+`doctor` is read-only. It checks repository config, prompt config, data directories, Codex CLI launchability, CLI-only boundaries, and whether `AGENTS.md` has reappeared.
 
 Render one prompt:
 

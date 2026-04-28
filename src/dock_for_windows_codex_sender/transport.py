@@ -6,6 +6,7 @@ import shlex
 import shutil
 import subprocess
 from pathlib import Path
+from collections.abc import Iterator
 
 from .models import RepoConfig, SendResult
 
@@ -34,6 +35,44 @@ def to_wsl_path(path: Path) -> str:
         rest = value[3:].replace("\\", "/")
         return f"/mnt/{drive}/{rest}"
     return value.replace("\\", "/")
+
+
+def candidate_wsl_codex_commands() -> Iterator[tuple[str, Path]]:
+    seen: set[str] = set()
+    candidates: list[tuple[str, Path]] = []
+
+    userprofile = os.getenv("USERPROFILE")
+    if userprofile:
+        local_path = Path(userprofile) / ".codex" / "bin" / "wsl" / "codex"
+        candidates.append((to_wsl_path(local_path), local_path))
+
+    username = os.getenv("USERNAME")
+    if username:
+        command_path = f"/mnt/c/Users/{username}/.codex/bin/wsl/codex"
+        candidates.append((command_path, Path(f"C:/Users/{username}/.codex/bin/wsl/codex")))
+
+    candidates.append(("/mnt/c/Users/amano/.codex/bin/wsl/codex", Path("C:/Users/amano/.codex/bin/wsl/codex")))
+
+    for command_path, local_path in candidates:
+        if command_path not in seen:
+            seen.add(command_path)
+            yield command_path, local_path
+
+
+def default_codex_bin(configured: str | None = None) -> str:
+    configured = configured or os.getenv("DOCK_CODEX_BIN")
+    if configured:
+        return configured
+
+    if shutil.which("codex") is not None:
+        return "codex"
+
+    if shutil.which("wsl.exe") is not None:
+        for command_path, local_path in candidate_wsl_codex_commands():
+            if local_path.exists() or Path(command_path).exists():
+                return f"wsl.exe {command_path}"
+
+    return "codex"
 
 
 def build_codex_exec_command(codex_bin: str, repo_path: Path) -> list[str]:

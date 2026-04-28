@@ -8,6 +8,7 @@ build/
 *.egg-info/
 
 .env
+settings.json
 config/repos.yaml
 
 data/outbox/

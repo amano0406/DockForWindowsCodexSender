@@ -1,5 +1,6 @@
 import argparse
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,19 @@ def make_test_project(root: Path) -> None:
     (root / "prompts" / "kinds").mkdir(parents=True, exist_ok=True)
     (root / "prompts" / "products").mkdir(parents=True, exist_ok=True)
     (root / "targets" / "timeline_for_chatgpt").mkdir(parents=True, exist_ok=True)
+
+    (root / "settings.example.json").write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "repos_config": "config/repos.yaml",
+                "prompts_config": "config/prompts.yaml",
+                "data_root": "data",
+                "codex_bin": "",
+            }
+        ),
+        encoding="utf-8",
+    )
 
     (root / "config" / "repos.example.yaml").write_text(
         "\n".join(
@@ -236,3 +250,139 @@ def test_cmd_send_all_requires_confirm_for_actual_send(tmp_path: Path):
 
     with pytest.raises(SystemExit, match="--confirm-send-all"):
         cli.cmd_send_all(args)
+
+
+def make_doctor_args(root: Path, *, codex_bin: str = "codex") -> argparse.Namespace:
+    return argparse.Namespace(
+        repos_config=root / "config" / "repos.yaml",
+        prompts_config=root / "config" / "prompts.yaml",
+        data_root=root / "data",
+        codex_bin=codex_bin,
+        run_id=None,
+    )
+
+
+def test_cmd_doctor_reports_ok_when_configs_and_codex_are_ready(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+):
+    make_test_project(tmp_path)
+    for name in ["outbox", "sent", "logs", "state"]:
+        (tmp_path / "data" / name).mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(cli, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr("dock_for_windows_codex_sender.doctor.shutil.which", lambda _: "codex")
+
+    def fake_run(*args, **kwargs):
+        return subprocess.CompletedProcess(args=args[0], returncode=0, stdout="codex 0.0.0\n", stderr="")
+
+    monkeypatch.setattr("dock_for_windows_codex_sender.doctor.subprocess.run", fake_run)
+
+    rc = cli.cmd_doctor(make_doctor_args(tmp_path))
+
+    captured = capsys.readouterr().out
+    assert rc == 0
+    assert "OK\trepos-config\tloaded 1 repos" in captured
+    assert "OK\tcodex-cli\tversion check passed: codex 0.0.0" in captured
+    assert "OK\tagents-policy\tAGENTS.md is absent as expected" in captured
+    assert "NG\t" not in captured
+
+
+def test_cmd_doctor_returns_ng_when_codex_launcher_is_missing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+):
+    make_test_project(tmp_path)
+    monkeypatch.setattr(cli, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr("dock_for_windows_codex_sender.doctor.shutil.which", lambda _: None)
+
+    rc = cli.cmd_doctor(make_doctor_args(tmp_path))
+
+    captured = capsys.readouterr().out
+    assert rc == 1
+    assert "NG\tcodex-cli\tlauncher not found: codex" in captured
+    assert "ACTION\tcodex-cli\tSet DOCK_CODEX_BIN" in captured
+
+
+def test_cmd_doctor_returns_ng_when_agents_file_reappears(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+):
+    make_test_project(tmp_path)
+    (tmp_path / "AGENTS.md").write_text("unexpected", encoding="utf-8")
+    monkeypatch.setattr(cli, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr("dock_for_windows_codex_sender.doctor.shutil.which", lambda _: "codex")
+
+    def fake_run(*args, **kwargs):
+        return subprocess.CompletedProcess(args=args[0], returncode=0, stdout="codex 0.0.0\n", stderr="")
+
+    monkeypatch.setattr("dock_for_windows_codex_sender.doctor.subprocess.run", fake_run)
+
+    rc = cli.cmd_doctor(make_doctor_args(tmp_path))
+
+    captured = capsys.readouterr().out
+    assert rc == 1
+    assert "NG\tagents-policy\tAGENTS.md exists" in captured
+
+
+def test_default_paths_use_settings_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    (tmp_path / "settings.json").write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "repos_config": "custom/repos.yaml",
+                "prompts_config": "custom/prompts.yaml",
+                "data_root": "custom/data",
+                "codex_bin": "settings-codex",
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "PROJECT_ROOT", tmp_path)
+    monkeypatch.delenv("DOCK_CODEX_REPOS_CONFIG", raising=False)
+    monkeypatch.delenv("DOCK_CODEX_PROMPTS_CONFIG", raising=False)
+    monkeypatch.delenv("DOCK_CODEX_DATA_ROOT", raising=False)
+    monkeypatch.delenv("DOCK_CODEX_BIN", raising=False)
+
+    assert cli.default_repos_config() == tmp_path / "custom" / "repos.yaml"
+    assert cli.default_prompts_config() == tmp_path / "custom" / "prompts.yaml"
+    assert cli.default_data_root() == tmp_path / "custom" / "data"
+    assert cli.default_codex_bin_arg() == "settings-codex"
+
+
+def test_cmd_settings_init_creates_settings_json_once(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+):
+    (tmp_path / "settings.example.json").write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "repos_config": "config/repos.yaml",
+                "prompts_config": "config/prompts.yaml",
+                "data_root": "data",
+                "codex_bin": "",
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cli, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(cli, "default_codex_bin", lambda: "detected-codex")
+
+    rc = cli.cmd_settings_init(argparse.Namespace())
+
+    captured = capsys.readouterr().out
+    data = json.loads((tmp_path / "settings.json").read_text(encoding="utf-8"))
+    assert rc == 0
+    assert "status=created" in captured
+    assert data["codex_bin"] == "detected-codex"
+
+    rc = cli.cmd_settings_init(argparse.Namespace())
+
+    captured = capsys.readouterr().out
+    assert rc == 0
+    assert "status=exists" in captured
+    assert json.loads((tmp_path / "settings.json").read_text(encoding="utf-8")) == data
