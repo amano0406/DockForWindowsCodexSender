@@ -42,8 +42,8 @@ Perform the following in order:
 
 1. Inspect the repository structure.
 2. Check whether `AGENTS.md` exists.
-3. If `AGENTS.md` is missing, create it using the product policy above.
-4. If `AGENTS.md` exists, update it only if needed.
+3. If `AGENTS.md` is missing, report that it is missing. Do not create it from this bootstrap prompt.
+4. If `AGENTS.md` exists, inspect it but update it only if the user explicitly requested AGENTS maintenance.
 5. Inspect README, docs, config, Docker, CLI, tests, and scripts.
 6. Check whether fixed input/output/state directory policy is documented or implemented.
 7. Check whether Job and Run concepts are mixed.
@@ -63,6 +63,7 @@ Perform the following in order:
 - Do not perform broad architecture rewrites.
 - Do not break output contracts.
 - Do not rename the product or repository.
+- Do not create `AGENTS.md`; use the separate `agents_update` prompt kind when AGENTS maintenance is explicitly requested.
 
 ## Report format
 

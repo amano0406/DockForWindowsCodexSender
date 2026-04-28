@@ -81,6 +81,27 @@ If `config/repos.yaml` does not exist, the CLI falls back to `config/repos.examp
 - `prompts/common/*.md`: shared context fragments
 - `prompts/products/*.md`: product-specific notes
 
+## Fixed local data policy
+
+This Dock product uses fixed local paths by default:
+
+```text
+data/
+  outbox/
+  sent/
+  logs/
+  state/
+```
+
+- `data/outbox/`: every rendered send attempt
+- `data/sent/`: copies of prompts after successful actual sends
+- `data/logs/send-log.jsonl`: append-only send evidence
+- `data/state/`: reserved local sender state
+
+`DOCK_CODEX_DATA_ROOT` may relocate the whole data root. Arbitrary per-command input/output paths are intentionally not the normal workflow.
+
+This repository does not own Timeline `Job` / `Run` execution output. For this sender, the stable evidence unit is a rendered prompt plus send attempt identified by `run_id`, `prompt_sha256`, and the JSONL send log record. Target Timeline repositories remain responsible for their own `Job` / `Run` / `Artifact` contracts.
+
 ## Codex binary setup
 
 If Codex CLI is installed on Windows and available on Windows `PATH`, the default `codex` is enough.

@@ -42,4 +42,6 @@ def test_render_prompt_bootstrap():
     assert "DockForWindowsCodexSender" in rendered.content
     assert "Send-only" in rendered.content or "send-only" in rendered.content
     assert "run-test-001" in rendered.content
+    assert "Do not create `AGENTS.md`" in rendered.content
+    assert "If `AGENTS.md` is missing, create it" not in rendered.content
     assert rendered.prompt_sha256
