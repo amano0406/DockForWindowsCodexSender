@@ -14,6 +14,10 @@ v0.1 scope:
 
 Out of scope for v0.1:
 
+- first-party Web UI or dashboard
+- browser frontend
+- local web service
+- Docker Compose web stack
 - Windows app UI automation
 - response scraping
 - autonomous scheduling

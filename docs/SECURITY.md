@@ -6,6 +6,7 @@
 - Do not commit `.env`.
 - Do not commit `config/repos.yaml` if it contains private local paths.
 - Do not log secrets, cookies, sessions, tokens, or API keys.
+- Do not add a Web UI, browser frontend, dashboard, localhost service, or Docker Compose web stack.
 - Do not automate Windows app UI until explicitly approved.
 
 ## Sending policy
@@ -21,6 +22,8 @@
 
 - response scraping
 - browser automation
+- Web UI / dashboard
+- local web service
 - Windows app UI automation
 - automatic scheduling
 - autonomous approval

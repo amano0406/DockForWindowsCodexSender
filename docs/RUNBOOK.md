@@ -13,6 +13,8 @@ copy config\repos.example.yaml config\repos.yaml
 
 Edit `config/repos.yaml`.
 
+This product has no Web UI. Operate it from the CLI commands below.
+
 If Codex CLI is available only in WSL, set:
 
 ```powershell
@@ -91,7 +93,7 @@ After actual send, verify in this order:
 1. Open `data/logs/send-log.jsonl` and confirm `run_id`, `prompt_sha256`, `outbox_path`, `sent_path`, `status`, and, if present, `observed_thread_id` / `observed_session_path`.
 2. Open the `data/outbox` or `data/sent` prompt file and confirm the same verification metadata is embedded in the body.
 3. If `observed_session_path` exists, treat it as the primary transcript evidence path even when Windows Codex UI or `session_index.jsonl` has not caught up.
-4. In Windows Codex UI, confirm the same `run_id` is visible in the prompt/thread view if the environment surfaces it.
+4. Optionally check Windows Codex UI manually if you need visual confirmation. This is outside the product boundary and may not show the latest CLI-sent content.
 5. If the task changed files, verify the actual changed files and test results in the target repo. Do not rely on UI summary text alone.
 
 If step 3 fails, treat CLI to UI synchronization as unverified in that environment and continue using file/log evidence as the source of truth.

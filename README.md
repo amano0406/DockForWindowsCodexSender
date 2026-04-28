@@ -9,9 +9,10 @@ This project starts small on purpose:
 - Dry-run before sending.
 - Send prompts through Codex CLI when explicitly requested.
 - Save rendered prompts, sent prompts, and send logs.
-- Treat Windows app UI as a human-visible management surface, not the primary transport.
+- Provide no first-party Web UI, dashboard, browser UI, or local web service.
+- Treat Windows Codex UI as an external manual observation surface, not part of this product.
 - Do **not** read or analyze Codex responses yet.
-- Do **not** automate the Windows Codex app UI yet.
+- Do **not** automate the Windows Codex app UI.
 
 ## Current scope
 
@@ -31,13 +32,27 @@ Prompt templates + repo registry
 
 Receiving and timeline analysis can be handled later by `TimelineForWindowsCodex`.
 
+## CLI-only product boundary
+
+This repository is intentionally CLI-only.
+
+It should not contain or add:
+
+- first-party Web UI or dashboard code
+- browser frontend code
+- localhost service hosts
+- Docker Compose web stacks
+- Windows Codex app UI automation
+
+The Windows Codex app can still be checked manually by a human. That manual check is outside this product boundary and is not the source of truth for sent content.
+
 ## Transport boundary
 
 - CLI send is the primary path for automation and log preservation.
-- Windows app UI is still useful for human visual/thread management.
+- Windows Codex UI can be useful for human visual/thread management, but this tool does not implement or control it.
 - CLI send to app UI synchronization is not guaranteed in v0.1 and should be treated as a verification target, not an assumption.
 - Receive-side organization is a later step using `send-log.jsonl`, transcript exports, and `TimelineForWindowsCodex`.
-- Windows app UI automation remains the last resort.
+- Windows app UI automation is out of scope for this product.
 
 ## Install for development
 

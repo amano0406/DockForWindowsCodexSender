@@ -6,7 +6,7 @@ Accepted.
 
 ## Decision
 
-Start `DockForWindowsCodexSender` as a send-only bridge.
+Start `DockForWindowsCodexSender` as a CLI-only, send-only bridge.
 
 v0.1 supports:
 
@@ -21,6 +21,10 @@ v0.1 supports:
 v0.1 does not support:
 
 - response scraping
+- first-party Web UI or dashboard
+- browser frontend
+- local web service
+- Docker Compose web stack
 - Windows app UI automation
 - autonomous scheduling
 - automatic merge
@@ -32,5 +36,5 @@ Sending prompts safely is the immediate bottleneck.
 
 Receiving and analysis can be handled later by `TimelineForWindowsCodex`.
 
-UI automation is useful but riskier than CLI transport, so it should not be the first implementation target.
-Windows app UI may still be used for human inspection, but CLI logs and artifacts remain the primary evidence path.
+Web UI and UI automation would add maintenance and verification cost without improving the v0.1 send-only goal.
+Windows app UI may still be used for human inspection, but it is outside this product boundary. CLI logs and artifacts remain the primary evidence path.

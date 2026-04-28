@@ -6,7 +6,7 @@ It exists because multiple Timeline/Dock/Tool product repositories need repeated
 
 ## Key decision
 
-Start with Codex CLI transport rather than Windows app UI automation.
+Keep the product CLI-only and use Codex CLI transport rather than any Web UI or Windows app UI automation.
 
 ## Why
 
@@ -14,9 +14,10 @@ Start with Codex CLI transport rather than Windows app UI automation.
 - CLI dry-run behavior is easier to reason about.
 - Sending logs are easier to preserve.
 - Prompt artifacts can carry verification metadata such as `run_id` and `prompt_sha256`.
+- A Web UI would add another surface to maintain without improving the send-only v0.1 goal.
 - Windows app UI automation has focus, IME, selector, thread-targeting, and UI-change risks.
 
-Windows app UI still matters for human visual management, but it is not the primary evidence source for sent content or changed files.
+Windows app UI can still be checked manually by a human, but it is outside this product boundary and is not the primary evidence source for sent content or changed files.
 
 ## Relationship to related products
 
