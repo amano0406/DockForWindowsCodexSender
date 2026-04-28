@@ -17,6 +17,12 @@ Direct host execution of `dock-windows-codex-sender` is blocked by default.
 Docker Desktop must be running before using the wrapper scripts.
 Codex CLI must be visible from inside the container; Windows `PATH` alone is not enough.
 
+Operational entry points:
+
+- Front door: Windows PowerShell, `.\scripts\docker.ps1` and `.\scripts\docker-test.ps1`.
+- Back door: WSL/bash, `./scripts/docker-wsl.sh` and `./scripts/docker-test-wsl.sh`, only when PowerShell is not practical.
+- Do not use direct host CLI execution for normal operation.
+
 If Codex CLI is available only in WSL, set:
 
 ```powershell

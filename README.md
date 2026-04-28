@@ -60,6 +60,12 @@ Normal operation is Docker-only. Direct host execution of `dock-windows-codex-se
 is blocked by default so local Python, PATH, and shell differences do not become part
 of the runtime contract.
 
+Entry-point policy:
+
+- Front door: Windows PowerShell, using `scripts\docker.ps1` and `scripts\docker-test.ps1`.
+- Back door: WSL/bash, using `scripts/docker-wsl.sh` and `scripts/docker-test-wsl.sh` only when PowerShell is not practical, for example from a WSL-based Codex automation context.
+- Blocked path: direct host CLI execution without Docker.
+
 Required host-side prerequisites:
 
 - Windows with Docker Desktop running.
@@ -93,6 +99,13 @@ For unit tests, use:
 
 ```powershell
 .\scripts\docker-test.ps1
+```
+
+WSL back-door equivalents are available but are not the normal user-facing route:
+
+```bash
+./scripts/docker-wsl.sh doctor
+./scripts/docker-test-wsl.sh
 ```
 
 Host execution is allowed only for explicit test/debug exceptions:

@@ -8,6 +8,8 @@ It exists because multiple Timeline/Dock/Tool product repositories need repeated
 
 Keep the product CLI-only and use Docker-wrapped Codex CLI transport rather than any Web UI or Windows app UI automation.
 
+Windows PowerShell is the front door for normal operation. WSL/bash wrappers remain available as a back-door route for WSL-based automation or troubleshooting, but they are not the primary user-facing path.
+
 ## Why
 
 - Docker-wrapped CLI is scriptable while keeping host Python/PATH out of the runtime contract.

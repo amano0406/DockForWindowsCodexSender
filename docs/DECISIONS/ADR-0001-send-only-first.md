@@ -40,3 +40,5 @@ Web UI and UI automation would add maintenance and verification cost without imp
 Windows app UI may still be used for human inspection, but it is outside this product boundary. CLI logs and artifacts remain the primary evidence path.
 
 Normal CLI execution is Docker-only. Host-side CLI execution is blocked by default and is available only for explicit test/debug exceptions through `DOCK_CODEX_ALLOW_HOST_CLI=1`.
+
+Windows PowerShell wrapper scripts are the normal entry point. WSL/bash wrapper scripts remain available as a back-door route for WSL-based automation and troubleshooting, but product documentation should keep PowerShell as the primary path.
